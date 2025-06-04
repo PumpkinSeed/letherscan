@@ -128,7 +128,7 @@
                             <h3 class="text-lg font-semibold mb-2">Transactions</h3>
                             <div class="space-y-2">
                                 {#each block.transactions as tx}
-                                    <div class="bg-gray-50 p-3 rounded">
+                                    <a href="/transaction/{tx.hash}" class="block bg-gray-50 p-3 rounded hover:bg-gray-100 transition-colors">
                                         <div class="flex justify-between items-center">
                                             <span class="font-mono text-sm">{tx.hash}</span>
                                             <span class="text-sm text-gray-500">Gas: {tx.gas}</span>
@@ -136,7 +136,7 @@
                                         <div class="text-sm text-gray-600 mt-1">
                                             From: {tx.from} → To: {tx.to}
                                         </div>
-                                    </div>
+                                    </a>
                                 {/each}
                             </div>
                         </div>
