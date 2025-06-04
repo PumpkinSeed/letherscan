@@ -1,6 +1,5 @@
 <script lang="ts">
     import { page } from '$app/stores';
-    import { onMount } from 'svelte';
 
     interface Transaction {
         hash: string;
@@ -23,27 +22,7 @@
         isPending: boolean;
     }
 
-    let transaction: Transaction | null = null;
-    let loading = true;
-    let error: string | null = null;
-
-    async function fetchTransaction() {
-        try {
-            const response = await fetch(`http://localhost:8080/transaction/${$page.params.hash}`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            transaction = await response.json();
-        } catch (e) {
-            error = e instanceof Error ? e.message : 'An error occurred while fetching transaction';
-        } finally {
-            loading = false;
-        }
-    }
-
-    onMount(() => {
-        fetchTransaction();
-    });
+    export let data;
 </script>
 
 <div class="container mx-auto px-4 py-8">
@@ -53,16 +32,12 @@
 
     <h1 class="text-3xl font-bold mb-6">Transaction Details</h1>
 
-    {#if loading}
-        <div class="flex justify-center items-center h-32">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-        </div>
-    {:else if error}
+    {#if !data.transaction}
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
             <strong class="font-bold">Error!</strong>
-            <span class="block sm:inline"> {error}</span>
+            <span class="block sm:inline"> Transaction not found</span>
         </div>
-    {:else if transaction}
+    {:else}
         <div class="bg-white shadow-lg rounded-lg overflow-hidden">
             <div class="p-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -71,11 +46,11 @@
                         <div class="space-y-4">
                             <div>
                                 <p class="text-sm text-gray-600">Hash</p>
-                                <p class="font-mono break-all">{transaction.hash}</p>
+                                <p class="font-mono break-all">{data.transaction.hash}</p>
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600">Nonce</p>
-                                <p>{transaction.nonce}</p>
+                                <p>{data.transaction.nonce}</p>
                             </div>
                         </div>
                     </div>
@@ -85,23 +60,23 @@
                         <div class="space-y-4">
                             <div>
                                 <p class="text-sm text-gray-600">From</p>
-                                <p class="font-mono break-all">{transaction.from}</p>
+                                <p class="font-mono break-all">{data.transaction.from}</p>
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600">To</p>
-                                <p class="font-mono break-all">{transaction.to}</p>
+                                <p class="font-mono break-all">{data.transaction.to}</p>
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600">Value</p>
-                                <p>{transaction.value} wei</p>
+                                <p>{data.transaction.value} wei</p>
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600">Gas Price</p>
-                                <p>{transaction.gas_price} wei</p>
+                                <p>{data.transaction.gas_price} wei</p>
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600">Gas Limit</p>
-                                <p>{transaction.gas}</p>
+                                <p>{data.transaction.gas}</p>
                             </div>
                         </div>
                     </div>
@@ -113,21 +88,21 @@
                         <div class="space-y-4">
                             <div>
                                 <p class="text-sm text-gray-600">Type</p>
-                                <p>{transaction.type}</p>
+                                <p>{data.transaction.type}</p>
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600">Method</p>
-                                <p>{transaction.method}</p>
+                                <p>{data.transaction.method}</p>
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600">Chain ID</p>
-                                <p>{transaction.chain_id}</p>
+                                <p>{data.transaction.chain_id}</p>
                             </div>
                         </div>
                         <div class="space-y-4">
                             <div>
                                 <p class="text-sm text-gray-600">Input Data</p>
-                                <p class="font-mono break-all text-sm bg-gray-50 p-2 rounded">{transaction.input}</p>
+                                <p class="font-mono break-all text-sm bg-gray-50 p-2 rounded">{data.transaction.input}</p>
                             </div>
                         </div>
                     </div>
