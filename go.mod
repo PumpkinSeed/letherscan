@@ -2,7 +2,11 @@ module github.com/PumpkinSeed/letherscan
 
 go 1.23.0
 
-require github.com/ethereum/go-ethereum v1.15.11
+require (
+	github.com/ethereum/go-ethereum v1.15.11
+	github.com/go-chi/chi/v5 v5.2.1
+	github.com/go-chi/cors v1.2.1
+)
 
 require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect

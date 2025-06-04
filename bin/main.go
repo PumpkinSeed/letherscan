@@ -1,13 +1,22 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
+	"io/fs"
+	"log"
 	"log/slog"
 	"net/http"
 	"os"
 
 	"github.com/PumpkinSeed/letherscan/pkg/communicator"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 )
+
+//go:embed build/*
+var embeddedFiles embed.FS
 
 const (
 	EthereumClientURLEnv = "ETHEREUM_CLIENT_URL"
@@ -25,20 +34,38 @@ func init() {
 }
 
 func main() {
-	mux := http.NewServeMux()
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	}))
 
-	mux.HandleFunc("GET /blocks", getBlocks)
-	mux.HandleFunc("GET /transaction/{hash}", getTransactionByHash)
+	distFS, err := fs.Sub(embeddedFiles, "build")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	slog.Info("Starting server on port 8080", slog.String("ethereum_client_url", etherClient.Address))
-	http.ListenAndServe(":8080", withCORS(mux))
+	r.Handle("/*", http.FileServer(http.FS(distFS)))
+
+	r.Get("/blocks", getBlocks)
+	r.Get("/transaction/{hash}", getTransactionByHash)
+
+	slog.Info("starting server", slog.String("address", ":8080"))
+	if err := http.ListenAndServe(":8080", r); err != nil {
+		slog.Error("failed to start server", "error", err)
+	}
 }
 
 func getTransactionByHash(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	respStruct, err := etherClient.GetTransactionByHash(ctx, communicator.GetTransactionByHashRequest{
-		Hash: r.PathValue("hash"),
+		Hash: chi.URLParam(r, "hash"),
 	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
