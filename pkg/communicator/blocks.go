@@ -65,7 +65,8 @@ type Transaction struct {
 	R                string   `json:"r"`
 	S                string   `json:"s"`
 	ChainId          string   `json:"chain_id"`
-	Type             uint8    `json:"type"`
+	Type             string   `json:"type"`
+	Method           string   `json:"method"`
 
 	IsPending bool `json:"isPending"`
 }
@@ -164,9 +165,37 @@ func parseTransaction(transaction *types.Transaction, blockNumber string, index 
 		S:                s.String(),
 		R:                r.String(),
 		ChainId:          transaction.ChainId().String(),
-		Type:             transaction.Type(),
+		Type:             parseTransactionType(transaction.Type()),
+		Method:           parseMethod(transaction),
 		IsPending:        false,
 	}, nil
+}
+
+func parseTransactionType(t uint8) string {
+	switch t {
+	case types.LegacyTxType:
+		return "legacy"
+	case types.AccessListTxType:
+		return "access_list"
+	case types.DynamicFeeTxType:
+		return "dynamic_fee"
+	case types.BlobTxType:
+		return "blob"
+	case types.SetCodeTxType:
+		return "set_code"
+	}
+	return "unknown"
+}
+
+func parseMethod(t *types.Transaction) string {
+	if t.To() == nil {
+		return "contract_creation"
+	} else if len(t.Data()) == 0 {
+		return "native_transfer"
+	} else {
+		return "contract_call"
+	}
+	return "unknown"
 }
 
 func blockHashToString(blockHash []common.Hash) []string {
