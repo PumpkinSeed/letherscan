@@ -1,4 +1,4 @@
-<img src="https://github.com/PumpkinSeed/letherscan/blob/cb354c7b4909013695e35f61f2c535794b257a34/assets/logo.png" width="100" alt="logo">
+<img src="https://github.com/PumpkinSeed/letherscan/blob/cb354c7b4909013695e35f61f2c535794b257a34/assets/logo.png" width="250" alt="logo">
 
 # letherscan - Lightweight Etherscan
 
@@ -34,3 +34,8 @@ mv ./frontend/build ./bin
 ```bash
 go build -o ./bin/letherscan ./bin/main.go
 ```
+
+## Screenshots
+
+<img src="https://github.com/PumpkinSeed/letherscan/blob/cb354c7b4909013695e35f61f2c535794b257a34/assets/block_view.png" alt="block view">
+<img src="https://github.com/PumpkinSeed/letherscan/blob/cb354c7b4909013695e35f61f2c535794b257a34/assets/transaction_view.png" alt="transaction view">
