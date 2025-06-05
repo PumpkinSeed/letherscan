@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { fetchWithNodeAddress } from '$lib/utils/fetch';
+    import { numberOfBlocks } from '$lib/stores/numberOfBlocks';
 
     interface Transaction {
         hash: string;
@@ -54,6 +55,12 @@
 
     export let data;
     let isLoading = false;
+    let blocksToFetch = 10;
+
+    // Subscribe to the numberOfBlocks store
+    numberOfBlocks.subscribe((value) => {
+        blocksToFetch = value;
+    });
 
     function formatTimestamp(timestamp: number): string {
         return new Date(timestamp * 1000).toLocaleString();
@@ -62,7 +69,7 @@
     async function handleReload() {
         try {
             isLoading = true;
-            const response = await fetchWithNodeAddress('http://localhost:8080/blocks');
+            const response = await fetchWithNodeAddress(`http://localhost:8080/blocks?number_of_blocks=${blocksToFetch}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }

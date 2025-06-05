@@ -7,6 +7,7 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/PumpkinSeed/letherscan/pkg/communicator"
 	"github.com/go-chi/chi/v5"
@@ -90,8 +91,14 @@ func getTransactionByHash(w http.ResponseWriter, r *http.Request) {
 func getBlocks(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
+	numberOfBlocks := r.URL.Query().Get("number_of_blocks")
+	numberOfBlocksInt, err := strconv.Atoi(numberOfBlocks)
+	if err != nil || numberOfBlocksInt <= 0 {
+		numberOfBlocksInt = 3 // Default to 3 blocks if not provided or invalid
+	}
+
 	respStruct, err := communicator.GetLatestNBlock(ctx, communicator.GetLatestNBlockRequest{
-		NumberOfBlocks: 3,
+		NumberOfBlocks: int64(numberOfBlocksInt),
 	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -1,16 +1,23 @@
 <script lang="ts">
 	import { nodeAddress } from '$lib/stores/nodeAddress';
+	import { numberOfBlocks } from '$lib/stores/numberOfBlocks';
 	import { browser } from '$app/environment';
 
 	let localNodeAddress = '';
+	let localNumberOfBlocks = 10;
 
-	// Subscribe to the store
+	// Subscribe to the stores
 	nodeAddress.subscribe((value) => {
 		localNodeAddress = value;
 	});
 
+	numberOfBlocks.subscribe((value) => {
+		localNumberOfBlocks = value;
+	});
+
 	function handleSubmit() {
 		nodeAddress.set(localNodeAddress);
+		numberOfBlocks.set(localNumberOfBlocks);
 		if (browser) {
 			alert('Settings saved successfully!');
 		}
@@ -30,6 +37,19 @@
 				placeholder="Enter node address (e.g., http://localhost:8080)"
 				class="input-field"
 			/>
+		</div>
+
+		<div class="form-group">
+			<label for="numberOfBlocks">Number of Blocks to Display</label>
+			<input
+				type="number"
+				id="numberOfBlocks"
+				bind:value={localNumberOfBlocks}
+				min="1"
+				max="100"
+				class="input-field"
+			/>
+			<p class="text-sm text-gray-500 mt-1">Set how many blocks to fetch and display (1-100)</p>
 		</div>
 		
 		<button type="submit" class="save-button">Save Settings</button>
