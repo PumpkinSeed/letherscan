@@ -70,7 +70,11 @@ func getLatestNBlock(ctx context.Context, req GetLatestNBlockRequest) (GetLatest
 	var response GetLatestNBlockResponse
 
 	for i := int64(0); i < req.NumberOfBlocks; i++ {
-		block, err := client.BlockByNumber(ctx, big.NewInt(req.BlockNumber-i))
+		nextIndex := req.BlockNumber - i
+		if nextIndex < 1 {
+			return response, nil // No more blocks to retrieve
+		}
+		block, err := client.BlockByNumber(ctx, big.NewInt(nextIndex))
 		if err != nil {
 			return GetLatestNBlockResponse{}, err
 		}
