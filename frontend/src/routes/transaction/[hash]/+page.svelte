@@ -1,5 +1,7 @@
 <script lang="ts">
     import { page } from '$app/stores';
+    import { fetchWithNodeAddress } from '$lib/utils/fetch';
+    import { slide } from 'svelte/transition';
 
     interface Transaction {
         hash: string;
@@ -23,6 +25,44 @@
     }
 
     export let data;
+    let showDecodeInput = false;
+    let contractABI = '';
+    let decodedData: { function_name: string; args: Record<string, any> } | null = null;
+    let isDecoding = false;
+    let decodeError: string | null = null;
+
+    async function handleDecode() {
+        if (!contractABI.trim()) {
+            decodeError = 'Please enter a contract ABI';
+            return;
+        }
+
+        try {
+            isDecoding = true;
+            decodeError = null;
+            const response = await fetchWithNodeAddress('http://localhost:8080/decode-contract-call-data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contract_abi: contractABI,
+                    input_data: data.transaction.input
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            decodedData = await response.json();
+        } catch (error) {
+            console.error('Error decoding input:', error);
+            decodeError = 'Failed to decode input data';
+        } finally {
+            isDecoding = false;
+        }
+    }
 </script>
 
 <div class="container mx-auto px-4 py-8">
@@ -106,6 +146,54 @@
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <div class="mt-6">
+                    <button
+                        on:click={() => showDecodeInput = !showDecodeInput}
+                        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+                    >
+                        {showDecodeInput ? 'Hide Decode Input' : 'Decode Input'}
+                    </button>
+
+                    {#if showDecodeInput}
+                        <div transition:slide class="mt-4">
+                            <div class="mb-4">
+                                <label for="contractABI" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Contract ABI
+                                </label>
+                                <textarea
+                                    id="contractABI"
+                                    bind:value={contractABI}
+                                    class="w-full h-32 p-2 border rounded font-mono text-sm"
+                                    placeholder="Paste your contract ABI here..."
+                                ></textarea>
+                            </div>
+
+                            <button
+                                on:click={handleDecode}
+                                disabled={isDecoding}
+                                class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors disabled:opacity-50"
+                            >
+                                {isDecoding ? 'Decoding...' : 'Decode'}
+                            </button>
+
+                            {#if decodeError}
+                                <p class="mt-2 text-red-500">{decodeError}</p>
+                            {/if}
+
+                            {#if decodedData}
+                                <div class="mt-4 p-4 bg-gray-50 rounded">
+                                    <h3 class="font-semibold mb-2">Decoded Data</h3>
+                                    <p class="mb-2"><span class="font-medium">Function:</span> {decodedData.function_name}</p>
+                                    <div>
+                                        <p class="font-medium mb-1">Arguments:</p>
+                                        <pre class="bg-white p-2 rounded overflow-x-auto">{JSON.stringify(decodedData.args, null, 2)}</pre>
+                                    </div>
+                                </div>
+                            {/if}
+                        </div>
+                    {/if}
                 </div>
             </div>
         </div>
