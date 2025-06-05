@@ -1,7 +1,10 @@
 <script lang="ts">
     import { page } from '$app/stores';
     import { fetchWithNodeAddress } from '$lib/utils/fetch';
+    import { get } from 'svelte/store';
+    import { nodeAddress } from '$lib/stores/nodeAddress';
     import { slide } from 'svelte/transition';
+    import { browser } from '$app/environment';
 
     interface Transaction {
         hash: string;
@@ -40,7 +43,10 @@
         try {
             isDecoding = true;
             decodeError = null;
-            const response = await fetchWithNodeAddress('http://localhost:8080/decode-contract-call-data', {
+            if (!browser) {
+                throw new Error('This code must run in the browser');
+            }
+            const response = await fetchWithNodeAddress(`${window.location.origin}/decode-contract-call-data`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

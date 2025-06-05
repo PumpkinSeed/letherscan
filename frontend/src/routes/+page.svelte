@@ -2,6 +2,8 @@
     import { onMount } from 'svelte';
     import { fetchWithNodeAddress } from '$lib/utils/fetch';
     import { numberOfBlocks } from '$lib/stores/numberOfBlocks';
+    import { browser } from '$app/environment';
+    import { get } from 'svelte/store';
     import { slide } from 'svelte/transition';
 
     interface Transaction {
@@ -81,7 +83,10 @@
     async function handleReload() {
         try {
             isLoading = true;
-            const url = new URL('http://localhost:8080/blocks');
+            if (!browser) {
+                throw new Error('This code must run in the browser');
+            }
+            const url = new URL(`${window.location.origin}/blocks`);
             url.searchParams.append('number_of_blocks', blocksToFetch.toString());
             if (blockNumber) {
                 url.searchParams.append('block_number', blockNumber);
