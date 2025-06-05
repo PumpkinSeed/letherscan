@@ -39,6 +39,12 @@ go build -o ./bin/letherscan ./bin/main.go
 ./bin/letherscan
 ```
 
+## Run - Docker
+
+```bash
+docker run --network=host pumpkinseed/letherscan:v0.0.5
+```
+
 ## Build & Run - Docker
 
 ### Build the Docker image
