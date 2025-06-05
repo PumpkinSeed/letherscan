@@ -2,6 +2,7 @@ package communicator
 
 import (
 	"context"
+	"log/slog"
 )
 
 type ContextKey string
@@ -17,8 +18,10 @@ func SetNodeAddress(ctx context.Context, address string) context.Context {
 }
 
 func GetNodeAddress(ctx context.Context) string {
+	var returnedAddress = DefaultNodeAddress
 	if address, ok := ctx.Value(NodeAddressContextKey).(string); ok {
-		return address
+		returnedAddress = address
 	}
-	return DefaultNodeAddress
+	slog.Info("Using Ethereum node address", slog.String("address", returnedAddress))
+	return returnedAddress
 }

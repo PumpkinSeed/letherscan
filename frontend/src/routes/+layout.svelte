@@ -11,6 +11,9 @@
 			<a href="/" class="menu-item" class:active={$page.url.pathname === '/'}>
 				Blocks
 			</a>
+			<a href="/settings" class="menu-item" class:active={$page.url.pathname === '/settings'}>
+				Settings
+			</a>
 		</nav>
 	</aside>
 	<main class="content">

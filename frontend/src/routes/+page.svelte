@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
+    import { fetchWithNodeAddress } from '$lib/utils/fetch';
 
     interface Transaction {
         hash: string;
@@ -52,14 +53,57 @@
     }
 
     export let data;
+    let isLoading = false;
 
     function formatTimestamp(timestamp: number): string {
         return new Date(timestamp * 1000).toLocaleString();
     }
+
+    async function handleReload() {
+        try {
+            isLoading = true;
+            const response = await fetchWithNodeAddress('http://localhost:8080/blocks');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const newData = await response.json();
+            data.blocks = newData.blocks;
+        } catch (error) {
+            console.error('Error fetching blocks:', error);
+        } finally {
+            isLoading = false;
+        }
+    }
 </script>
 
 <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">Block Explorer</h1>
+    <div class="flex items-center gap-4 mb-6">
+        <h1 class="text-3xl font-bold">Block Explorer</h1>
+        <button 
+            on:click={handleReload}
+            class="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            title="Reload blocks"
+            disabled={isLoading}
+        >
+            <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width="24" 
+                height="24" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                stroke-width="2" 
+                stroke-linecap="round" 
+                stroke-linejoin="round"
+                class="text-gray-600 {isLoading ? 'animate-spin' : ''}"
+            >
+                <path d="M21 2v6h-6"/>
+                <path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+                <path d="M3 22v-6h6"/>
+                <path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+            </svg>
+        </button>
+    </div>
 
     <div class="space-y-6">
         {#each data.blocks as block}

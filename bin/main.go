@@ -29,7 +29,7 @@ func main() {
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", NodeAddressHeaderKey},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
@@ -37,8 +37,8 @@ func main() {
 	r.Use(func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			nodeAddress := r.Header.Get(NodeAddressHeaderKey)
-			if nodeAddress == "" {
-				r.WithContext(communicator.SetNodeAddress(r.Context(), nodeAddress))
+			if nodeAddress != "" {
+				r = r.WithContext(communicator.SetNodeAddress(r.Context(), nodeAddress))
 			}
 
 			next.ServeHTTP(w, r)
@@ -91,7 +91,7 @@ func getBlocks(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	respStruct, err := communicator.GetLatestNBlock(ctx, communicator.GetLatestNBlockRequest{
-		NumberOfBlocks: 7,
+		NumberOfBlocks: 3,
 	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -3,6 +3,7 @@ package communicator
 import (
 	"context"
 	"fmt"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -58,7 +59,11 @@ func getTransactionByHash(ctx context.Context, req GetTransactionByHashRequest) 
 }
 
 func parseTransaction(transaction *types.Transaction, blockNumber string, index int64) (Transaction, error) {
-	signer := types.LatestSignerForChainID(transaction.ChainId())
+	chainID := transaction.ChainId()
+	if chainID == nil || chainID.Int64() == 0 {
+		chainID = big.NewInt(1)
+	}
+	signer := types.LatestSignerForChainID(chainID)
 	sender, err := types.Sender(signer, transaction)
 	if err != nil {
 		return Transaction{}, err
@@ -72,19 +77,33 @@ func parseTransaction(transaction *types.Transaction, blockNumber string, index 
 		BlockNumber:      blockNumber,
 		TransactionIndex: index,
 		From:             sender.Hex(),
-		To:               transaction.To().Hex(),
-		Value:            transaction.Value().String(),
-		GasPrice:         transaction.GasPrice().String(),
+		To:               safeHexAddress(transaction.To()),
+		Value:            safeBigIntToString(transaction.Value()),
+		GasPrice:         safeBigIntToString(transaction.GasPrice()),
 		Gas:              transaction.Gas(),
 		Input:            fmt.Sprintf("%x", transaction.Data()),
-		V:                v.String(),
-		S:                s.String(),
-		R:                r.String(),
-		ChainId:          transaction.ChainId().String(),
+		V:                safeBigIntToString(v),
+		S:                safeBigIntToString(s),
+		R:                safeBigIntToString(r),
+		ChainId:          safeBigIntToString(chainID),
 		Type:             parseTransactionType(transaction.Type()),
 		Method:           parseMethod(transaction),
 		IsPending:        false,
 	}, nil
+}
+
+func safeHexAddress(addr *common.Address) string {
+	if addr == nil {
+		return ""
+	}
+	return addr.Hex()
+}
+
+func safeBigIntToString(value *big.Int) string {
+	if value == nil {
+		return "0"
+	}
+	return value.String()
 }
 
 func parseTransactionType(t uint8) string {

@@ -1,8 +1,10 @@
+import { fetchWithNodeAddress } from '$lib/utils/fetch';
+
 export const prerender = true;
 
 export async function load() {
     try {
-        const response = await fetch('http://localhost:8080/blocks');
+        const response = await fetchWithNodeAddress('http://localhost:8080/blocks');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
