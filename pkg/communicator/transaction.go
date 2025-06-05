@@ -81,7 +81,7 @@ func parseTransaction(transaction *types.Transaction, blockNumber string, index 
 		Value:            safeBigIntToString(transaction.Value()),
 		GasPrice:         safeBigIntToString(transaction.GasPrice()),
 		Gas:              transaction.Gas(),
-		Input:            fmt.Sprintf("%x", transaction.Data()),
+		Input:            fmt.Sprintf("0x%x", transaction.Data()),
 		V:                safeBigIntToString(v),
 		S:                safeBigIntToString(s),
 		R:                safeBigIntToString(r),

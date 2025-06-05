@@ -19,8 +19,6 @@ import (
 var embeddedFiles embed.FS
 
 const (
-	EthereumClientURLEnv = "ETHEREUM_CLIENT_URL"
-
 	NodeAddressHeaderKey = "X-Node-Address"
 )
 
@@ -56,11 +54,42 @@ func main() {
 
 	r.Get("/blocks", getBlocks)
 	r.Get("/transaction/{hash}", getTransactionByHash)
+	r.Post("/decode-contract-call-data", decodeContractCallData)
 
 	slog.Info("starting server", slog.String("address", ":8080"))
 	if err := http.ListenAndServe(":8080", r); err != nil {
 		slog.Error("failed to start server", "error", err)
 	}
+}
+
+func decodeContractCallData(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var req communicator.DecodeContractCallDataRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	respStruct, err := communicator.DecodeContractCallData(ctx, req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	data, err := json.Marshal(respStruct)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_, err = w.Write(data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
 }
 
 func getTransactionByHash(w http.ResponseWriter, r *http.Request) {
