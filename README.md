@@ -16,7 +16,7 @@ Also, primarily I use this for my own purposes, so the code is not production re
 
 I built it in a night, so it's not a polished product. :D
 
-## Build
+## Build & Run - Binary
 
 ### Build the frontend
 
@@ -35,6 +35,23 @@ mv ./frontend/build ./bin
 
 ```bash
 go build -o ./bin/letherscan ./bin/main.go
+
+./bin/letherscan
+```
+
+## Build & Run - Docker
+
+### Build the Docker image
+
+```bash
+docker build -t letherscan .
+```
+
+### Run the Docker container
+
+```bash
+# Host network is required for the application to access the locally running hardhat node.
+docker run --network=host letherscan
 ```
 
 ## Screenshots
