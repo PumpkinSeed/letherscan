@@ -59,15 +59,18 @@ func getLatestNBlock(ctx context.Context, req GetLatestNBlockRequest) (GetLatest
 		return GetLatestNBlockResponse{}, err
 	}
 
-	blockNumber, err := client.BlockNumber(ctx)
-	if err != nil {
-		return GetLatestNBlockResponse{}, err
+	if req.BlockNumber == 0 {
+		blockNumber, err := client.BlockNumber(ctx)
+		if err != nil {
+			return GetLatestNBlockResponse{}, err
+		}
+		req.BlockNumber = int64(blockNumber)
 	}
 
 	var response GetLatestNBlockResponse
 
 	for i := int64(0); i < req.NumberOfBlocks; i++ {
-		block, err := client.BlockByNumber(ctx, big.NewInt(int64(blockNumber)-i))
+		block, err := client.BlockByNumber(ctx, big.NewInt(req.BlockNumber-i))
 		if err != nil {
 			return GetLatestNBlockResponse{}, err
 		}

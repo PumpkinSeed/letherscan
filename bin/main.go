@@ -97,8 +97,15 @@ func getBlocks(w http.ResponseWriter, r *http.Request) {
 		numberOfBlocksInt = 3 // Default to 3 blocks if not provided or invalid
 	}
 
+	blockNumber := r.URL.Query().Get("block_number")
+	blockNumberInt, err := strconv.Atoi(blockNumber)
+	if err != nil || blockNumberInt < 0 {
+		blockNumberInt = 0
+	}
+
 	respStruct, err := communicator.GetLatestNBlock(ctx, communicator.GetLatestNBlockRequest{
 		NumberOfBlocks: int64(numberOfBlocksInt),
+		BlockNumber:    int64(blockNumberInt),
 	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -2,6 +2,7 @@
     import { onMount } from 'svelte';
     import { fetchWithNodeAddress } from '$lib/utils/fetch';
     import { numberOfBlocks } from '$lib/stores/numberOfBlocks';
+    import { slide } from 'svelte/transition';
 
     interface Transaction {
         hash: string;
@@ -56,6 +57,7 @@
     export let data;
     let isLoading = false;
     let blocksToFetch = 10;
+    let expandedBlocks = new Set<string>();
 
     // Subscribe to the numberOfBlocks store
     numberOfBlocks.subscribe((value) => {
@@ -64,6 +66,15 @@
 
     function formatTimestamp(timestamp: number): string {
         return new Date(timestamp * 1000).toLocaleString();
+    }
+
+    function toggleBlock(blockNumber: string) {
+        if (expandedBlocks.has(blockNumber)) {
+            expandedBlocks.delete(blockNumber);
+        } else {
+            expandedBlocks.add(blockNumber);
+        }
+        expandedBlocks = expandedBlocks; // trigger reactivity
     }
 
     async function handleReload() {
@@ -75,6 +86,8 @@
             }
             const newData = await response.json();
             data.blocks = newData.blocks;
+            // Reset expanded blocks when reloading
+            expandedBlocks = new Set();
         } catch (error) {
             console.error('Error fetching blocks:', error);
         } finally {
@@ -117,45 +130,71 @@
             <div class="bg-white shadow-lg rounded-lg overflow-hidden">
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-semibold">Block #{block.header.number}</h2>
+                        <div class="flex items-center gap-3">
+                            <button 
+                                on:click={() => toggleBlock(block.header.number)}
+                                class="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                                title={expandedBlocks.has(block.header.number) ? "Collapse block" : "Expand block"}
+                            >
+                                <svg 
+                                    xmlns="http://www.w3.org/2000/svg" 
+                                    width="20" 
+                                    height="20" 
+                                    viewBox="0 0 24 24" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    stroke-width="2" 
+                                    stroke-linecap="round" 
+                                    stroke-linejoin="round"
+                                    class="text-gray-600 transition-transform {expandedBlocks.has(block.header.number) ? 'rotate-90' : ''}"
+                                >
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </button>
+                            <h2 class="text-xl font-semibold">Block #{block.header.number}</h2>
+                        </div>
                         <span class="text-gray-500">{formatTimestamp(block.header.timestamp)}</span>
                     </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <p class="text-sm text-gray-600">Miner</p>
-                            <p class="font-mono">{block.header.miner}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-600">Gas Used</p>
-                            <p>{block.header.gas_used.toLocaleString()} / {block.header.gas_limit.toLocaleString()}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-600">Base Fee</p>
-                            <p>{block.header.base_fee} wei</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-600">Transactions</p>
-                            <p>{block.transactions.length}</p>
-                        </div>
-                    </div>
+                    {#if expandedBlocks.has(block.header.number)}
+                        <div transition:slide>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <p class="text-sm text-gray-600">Miner</p>
+                                    <p class="font-mono">{block.header.miner}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Gas Used</p>
+                                    <p>{block.header.gas_used.toLocaleString()} / {block.header.gas_limit.toLocaleString()}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Base Fee</p>
+                                    <p>{block.header.base_fee} wei</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Transactions</p>
+                                    <p>{block.transactions.length}</p>
+                                </div>
+                            </div>
 
-                    <div class="mt-4">
-                        <h3 class="text-lg font-semibold mb-2">Transactions</h3>
-                        <div class="space-y-2">
-                            {#each block.transactions as tx}
-                                <a href="/transaction/{tx.hash}" class="block bg-gray-50 p-3 rounded hover:bg-gray-100 transition-colors">
-                                    <div class="flex justify-between items-center">
-                                        <span class="font-mono text-sm">{tx.hash}</span>
-                                        <span class="text-sm text-gray-500">Gas: {tx.gas}</span>
-                                    </div>
-                                    <div class="text-sm text-gray-600 mt-1">
-                                        From: {tx.from} → To: {tx.to}
-                                    </div>
-                                </a>
-                            {/each}
+                            <div class="mt-4">
+                                <h3 class="text-lg font-semibold mb-2">Transactions</h3>
+                                <div class="space-y-2">
+                                    {#each block.transactions as tx}
+                                        <a href="/transaction/{tx.hash}" class="block bg-gray-50 p-3 rounded hover:bg-gray-100 transition-colors">
+                                            <div class="flex justify-between items-center">
+                                                <span class="font-mono text-sm">{tx.hash}</span>
+                                                <span class="text-sm text-gray-500">Gas: {tx.gas}</span>
+                                            </div>
+                                            <div class="text-sm text-gray-600 mt-1">
+                                                From: {tx.from} → To: {tx.to}
+                                            </div>
+                                        </a>
+                                    {/each}
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    {/if}
                 </div>
             </div>
         {/each}
