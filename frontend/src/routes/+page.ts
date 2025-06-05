@@ -2,7 +2,7 @@ import { fetchWithNodeAddress } from '$lib/utils/fetch';
 import { get } from 'svelte/store';
 import { numberOfBlocks } from '$lib/stores/numberOfBlocks';
 
-export const prerender = true;
+export const prerender = false;
 
 export async function load() {
     try {

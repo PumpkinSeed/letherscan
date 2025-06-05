@@ -1,3 +1,5 @@
+![logo](https://github.com/PumpkinSeed/letherscan/blob/cb354c7b4909013695e35f61f2c535794b257a34/assets/logo.png "Logo")
+
 # letherscan - Lightweight Etherscan
 
 ## Motivation

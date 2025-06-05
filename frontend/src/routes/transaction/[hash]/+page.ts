@@ -1,6 +1,6 @@
 import { fetchWithNodeAddress } from '$lib/utils/fetch';
 
-export const prerender = true;
+export const prerender = false;
 
 interface Transaction {
     hash: string;
@@ -21,35 +21,6 @@ interface Transaction {
     type: string;
     method: string;
     isPending: boolean;
-}
-
-interface Block {
-    header: {
-        number: string;
-        // ... other header fields
-    };
-    transactions: Transaction[];
-}
-
-interface BlocksResponse {
-    blocks: Block[];
-}
-
-// This function tells SvelteKit which transaction hashes to prerender
-export async function entries() {
-    // Fetch all blocks to get transaction hashes
-    const response = await fetchWithNodeAddress('http://localhost:8080/blocks');
-    if (!response.ok) {
-        return [];
-    }
-    const data: BlocksResponse = await response.json();
-    
-    // Extract all transaction hashes from all blocks
-    const hashes = data.blocks.flatMap((block: Block) => 
-        block.transactions.map((tx: Transaction) => tx.hash)
-    );
-    
-    return hashes.map((hash: string) => ({ hash }));
 }
 
 export async function load({ params }: { params: { hash: string } }) {
