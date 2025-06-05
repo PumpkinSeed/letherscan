@@ -19,6 +19,8 @@ import (
 var embeddedFiles embed.FS
 
 const (
+	EnvHost = "HOST"
+
 	NodeAddressHeaderKey = "X-Node-Address"
 )
 
@@ -78,8 +80,12 @@ func main() {
 	r.Get("/transaction/{hash}", getTransactionByHash)
 	r.Post("/decode-contract-call-data", decodeContractCallData)
 
-	slog.Info("starting server", slog.String("address", ":8080"))
-	if err := http.ListenAndServe(":8080", r); err != nil {
+	host := ":8080"
+	if envHost := os.Getenv(EnvHost); envHost != "" {
+		host = ":" + envHost
+	}
+	slog.Info("starting server", slog.String("address", host))
+	if err := http.ListenAndServe(host, r); err != nil {
 		slog.Error("failed to start server", "error", err)
 	}
 }
