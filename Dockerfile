@@ -19,9 +19,8 @@ COPY --from=frontend-builder /app/frontend/build ./bin/build
 RUN go build -o ./bin/letherscan ./bin/main.go
 
 # Final stage: create a minimal image to run the backend
-FROM gcr.io/distroless/base-debian12
+FROM debian:bookworm-slim
 
-WORKDIR /app
-COPY --from=backend-builder /app/bin /app/bin
+COPY --from=backend-builder /app/bin/letherscan /app/bin/letherscan
 
 ENTRYPOINT ["/app/bin/letherscan"]

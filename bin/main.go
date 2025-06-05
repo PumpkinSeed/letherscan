@@ -7,11 +7,11 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/PumpkinSeed/letherscan/pkg/communicator"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 )
 
@@ -23,8 +23,12 @@ const (
 )
 
 func main() {
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	})))
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
+
+	// CORS middleware setup
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -33,12 +37,30 @@ func main() {
 		AllowCredentials: true,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
+
+	// Get Node Address from header and set it in context
 	r.Use(func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			nodeAddress := r.Header.Get(NodeAddressHeaderKey)
 			if nodeAddress != "" {
 				r = r.WithContext(communicator.SetNodeAddress(r.Context(), nodeAddress))
 			}
+
+			next.ServeHTTP(w, r)
+		}
+		return http.HandlerFunc(fn)
+	})
+
+	// Logging middleware
+	r.Use(func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			slog.InfoContext(
+				r.Context(),
+				"Request received",
+				slog.String("method", r.Method),
+				slog.String("url", r.URL.String()),
+				slog.String("remote_addr", r.RemoteAddr),
+			)
 
 			next.ServeHTTP(w, r)
 		}
