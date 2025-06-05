@@ -117,6 +117,7 @@
                 class="p-2 hover:bg-gray-100 rounded-full transition-colors"
                 title="Reload blocks"
                 disabled={isLoading}
+                aria-label="Reload blocks"
             >
                 <svg 
                     xmlns="http://www.w3.org/2000/svg" 
@@ -149,6 +150,7 @@
                                 on:click={() => toggleBlock(block.header.number)}
                                 class="p-1 hover:bg-gray-100 rounded-full transition-colors"
                                 title={expandedBlocks.has(block.header.number) ? "Collapse block" : "Expand block"}
+                                aria-label={expandedBlocks.has(block.header.number) ? "Collapse block" : "Expand block"}
                             >
                                 <svg 
                                     xmlns="http://www.w3.org/2000/svg" 
