@@ -10,6 +10,8 @@ I'm a backend engineer, so the content of the frontend folder is 100% Cursor gen
 
 Also, primarily I use this for my own purposes, so the code is not production ready. If you want to use it, feel free to do so, but be aware that it might not work as expected. I'm happy to accept issues and PRs, but I can't guarantee that I will fix them in a timely manner.
 
+I built it in a night, so it's not a polished product. :D
+
 ## Build
 
 ### Build the frontend
