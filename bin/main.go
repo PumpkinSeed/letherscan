@@ -67,6 +67,7 @@ func decodeContractCallData(w http.ResponseWriter, r *http.Request) {
 
 	var req communicator.DecodeContractCallDataRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		slog.ErrorContext(ctx, "Failed to decode request body", slog.Any("err", err))
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -79,12 +80,14 @@ func decodeContractCallData(w http.ResponseWriter, r *http.Request) {
 
 	data, err := json.Marshal(respStruct)
 	if err != nil {
+		slog.ErrorContext(ctx, "Failed to marshal response", slog.Any("err", err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	_, err = w.Write(data)
 	if err != nil {
+		slog.ErrorContext(ctx, "Failed to write response", slog.Any("err", err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -105,6 +108,7 @@ func getTransactionByHash(w http.ResponseWriter, r *http.Request) {
 
 	data, err := json.Marshal(respStruct)
 	if err != nil {
+		slog.ErrorContext(ctx, "Failed to marshal response", slog.Any("err", err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -112,6 +116,7 @@ func getTransactionByHash(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
 	if err != nil {
+		slog.ErrorContext(ctx, "Failed to write response", slog.Any("err", err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -143,6 +148,7 @@ func getBlocks(w http.ResponseWriter, r *http.Request) {
 
 	data, err := json.Marshal(respStruct)
 	if err != nil {
+		slog.ErrorContext(ctx, "Failed to marshal response", slog.Any("err", err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -150,6 +156,7 @@ func getBlocks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
 	if err != nil {
+		slog.ErrorContext(ctx, "Failed to write response", slog.Any("err", err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

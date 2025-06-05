@@ -3,6 +3,7 @@ package communicator
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -43,15 +44,18 @@ func GetTransactionByHash(ctx context.Context, req GetTransactionByHashRequest) 
 func getTransactionByHash(ctx context.Context, req GetTransactionByHashRequest) (Transaction, error) {
 	client, err := ethclient.Dial(GetNodeAddress(ctx))
 	if err != nil {
+		slog.ErrorContext(ctx, "Failed to connect to Ethereum client", slog.Any("err", err))
 		return Transaction{}, err
 	}
 
 	transaction, isPending, err := client.TransactionByHash(ctx, common.HexToHash(req.Hash))
 	if err != nil {
+		slog.ErrorContext(ctx, "Failed to get transaction by hash", slog.Any("hash", req.Hash), slog.Any("err", err))
 		return Transaction{}, err
 	}
 	parsedTransaction, err := parseTransaction(transaction, "", 0)
 	if err != nil {
+		slog.ErrorContext(ctx, "Failed to parse transaction", slog.Any("hash", req.Hash), slog.Any("err", err))
 		return Transaction{}, err
 	}
 	parsedTransaction.IsPending = isPending
@@ -66,6 +70,7 @@ func parseTransaction(transaction *types.Transaction, blockNumber string, index 
 	signer := types.LatestSignerForChainID(chainID)
 	sender, err := types.Sender(signer, transaction)
 	if err != nil {
+		slog.Error("Failed to get transaction sender", slog.Any("err", err))
 		return Transaction{}, err
 	}
 

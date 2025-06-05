@@ -2,6 +2,7 @@ package communicator
 
 import (
 	"context"
+	"log/slog"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -56,12 +57,14 @@ func GetLatestNBlock(ctx context.Context, req GetLatestNBlockRequest) (GetLatest
 func getLatestNBlock(ctx context.Context, req GetLatestNBlockRequest) (GetLatestNBlockResponse, error) {
 	client, err := ethclient.Dial(GetNodeAddress(ctx))
 	if err != nil {
+		slog.ErrorContext(ctx, "Failed to connect to Ethereum client", slog.Any("err", err))
 		return GetLatestNBlockResponse{}, err
 	}
 
 	if req.BlockNumber == 0 {
 		blockNumber, err := client.BlockNumber(ctx)
 		if err != nil {
+			slog.ErrorContext(ctx, "Failed to get latest block number", slog.Any("err", err))
 			return GetLatestNBlockResponse{}, err
 		}
 		req.BlockNumber = int64(blockNumber)
@@ -76,6 +79,7 @@ func getLatestNBlock(ctx context.Context, req GetLatestNBlockRequest) (GetLatest
 		}
 		block, err := client.BlockByNumber(ctx, big.NewInt(nextIndex))
 		if err != nil {
+			slog.ErrorContext(ctx, "Failed to retrieve block", slog.Any("block_number", nextIndex), slog.Any("err", err))
 			return GetLatestNBlockResponse{}, err
 		}
 
@@ -83,6 +87,7 @@ func getLatestNBlock(ctx context.Context, req GetLatestNBlockRequest) (GetLatest
 		for j, transaction := range block.Transactions() {
 			parsedTransaction, err := parseTransaction(transaction, block.Number().String(), int64(j))
 			if err != nil {
+				slog.ErrorContext(ctx, "Failed to parse transaction", slog.Any("block_number", nextIndex), slog.Any("transaction_index", j), slog.Any("err", err))
 				return GetLatestNBlockResponse{}, err
 			}
 			transactions = append(transactions, parsedTransaction)
