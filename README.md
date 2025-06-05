@@ -1,4 +1,4 @@
-![logo](https://github.com/PumpkinSeed/letherscan/blob/cb354c7b4909013695e35f61f2c535794b257a34/assets/logo.png "Logo")
+<img src="https://github.com/PumpkinSeed/letherscan/blob/cb354c7b4909013695e35f61f2c535794b257a34/assets/logo.png" width="100" alt="logo">
 
 # letherscan - Lightweight Etherscan
 
