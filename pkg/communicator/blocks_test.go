@@ -8,15 +8,12 @@ import (
 )
 
 func TestGetLatestNBlock(t *testing.T) {
-	// Create a mock client
-	client := NewClient("http://localhost:8545")
-
 	// Define the context
 	ctx := context.Background()
 
 	mes := time.Now()
 	// Call the function with a valid client and context
-	resp, err := getLatestNBlock(ctx, client, GetLatestNBlockRequest{
+	resp, err := getLatestNBlock(ctx, GetLatestNBlockRequest{
 		NumberOfBlocks: 7,
 	})
 	if err != nil {

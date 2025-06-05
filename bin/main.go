@@ -7,7 +7,6 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
-	"os"
 
 	"github.com/PumpkinSeed/letherscan/pkg/communicator"
 	"github.com/go-chi/chi/v5"
@@ -20,18 +19,9 @@ var embeddedFiles embed.FS
 
 const (
 	EthereumClientURLEnv = "ETHEREUM_CLIENT_URL"
+
+	NodeAddressHeaderKey = "X-Node-Address"
 )
-
-var etherClient *communicator.Client
-
-func init() {
-	var defaultURL = "http://localhost:8545"
-	if defaultURLEnv := os.Getenv(EthereumClientURLEnv); defaultURLEnv != "" {
-		defaultURL = defaultURLEnv
-	}
-	// Initialize the Ethereum client
-	etherClient = communicator.NewClient(defaultURL)
-}
 
 func main() {
 	r := chi.NewRouter()
@@ -44,6 +34,17 @@ func main() {
 		AllowCredentials: true,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
+	r.Use(func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			nodeAddress := r.Header.Get(NodeAddressHeaderKey)
+			if nodeAddress == "" {
+				r.WithContext(communicator.SetNodeAddress(r.Context(), nodeAddress))
+			}
+
+			next.ServeHTTP(w, r)
+		}
+		return http.HandlerFunc(fn)
+	})
 
 	distFS, err := fs.Sub(embeddedFiles, "build")
 	if err != nil {
@@ -64,7 +65,7 @@ func main() {
 func getTransactionByHash(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	respStruct, err := etherClient.GetTransactionByHash(ctx, communicator.GetTransactionByHashRequest{
+	respStruct, err := communicator.GetTransactionByHash(ctx, communicator.GetTransactionByHashRequest{
 		Hash: chi.URLParam(r, "hash"),
 	})
 	if err != nil {
@@ -89,7 +90,7 @@ func getTransactionByHash(w http.ResponseWriter, r *http.Request) {
 func getBlocks(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	respStruct, err := etherClient.GetLatestNBlock(ctx, communicator.GetLatestNBlockRequest{
+	respStruct, err := communicator.GetLatestNBlock(ctx, communicator.GetLatestNBlockRequest{
 		NumberOfBlocks: 7,
 	})
 	if err != nil {

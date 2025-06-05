@@ -1,23 +1,24 @@
 package communicator
 
 import (
-	"github.com/ethereum/go-ethereum/ethclient"
+	"context"
 )
 
-type Client struct {
-	// Address of the client
-	Address string `json:"address"`
+type ContextKey string
 
-	eth *ethclient.Client
+const (
+	NodeAddressContextKey ContextKey = "node_address"
+
+	DefaultNodeAddress = "http://localhost:8545" // Default Ethereum node address
+)
+
+func SetNodeAddress(ctx context.Context, address string) context.Context {
+	return context.WithValue(ctx, NodeAddressContextKey, address)
 }
 
-func NewClient(address string) *Client {
-	client, err := ethclient.Dial(address)
-	if err != nil {
-		panic(err) // TODO: handle error properly
+func GetNodeAddress(ctx context.Context) string {
+	if address, ok := ctx.Value(NodeAddressContextKey).(string); ok {
+		return address
 	}
-	return &Client{
-		Address: address,
-		eth:     client,
-	}
+	return DefaultNodeAddress
 }

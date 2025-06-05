@@ -6,6 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethclient"
 )
 
 type GetLatestNBlockRequest struct {
@@ -48,12 +49,17 @@ type Header struct {
 	RequestsHash     string           `json:"requests_hash"`
 }
 
-func (c *Client) GetLatestNBlock(ctx context.Context, req GetLatestNBlockRequest) (GetLatestNBlockResponse, error) {
-	return getLatestNBlock(ctx, c, req)
+func GetLatestNBlock(ctx context.Context, req GetLatestNBlockRequest) (GetLatestNBlockResponse, error) {
+	return getLatestNBlock(ctx, req)
 }
 
-func getLatestNBlock(ctx context.Context, client *Client, req GetLatestNBlockRequest) (GetLatestNBlockResponse, error) {
-	blockNumber, err := client.eth.BlockNumber(ctx)
+func getLatestNBlock(ctx context.Context, req GetLatestNBlockRequest) (GetLatestNBlockResponse, error) {
+	client, err := ethclient.Dial(GetNodeAddress(ctx))
+	if err != nil {
+		return GetLatestNBlockResponse{}, err
+	}
+
+	blockNumber, err := client.BlockNumber(ctx)
 	if err != nil {
 		return GetLatestNBlockResponse{}, err
 	}
@@ -61,7 +67,7 @@ func getLatestNBlock(ctx context.Context, client *Client, req GetLatestNBlockReq
 	var response GetLatestNBlockResponse
 
 	for i := int64(0); i < req.NumberOfBlocks; i++ {
-		block, err := client.eth.BlockByNumber(ctx, big.NewInt(int64(blockNumber)-i))
+		block, err := client.BlockByNumber(ctx, big.NewInt(int64(blockNumber)-i))
 		if err != nil {
 			return GetLatestNBlockResponse{}, err
 		}

@@ -3,9 +3,10 @@ package communicator
 import (
 	"context"
 	"fmt"
-	"github.com/ethereum/go-ethereum/core/types"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethclient"
 )
 
 type GetTransactionByHashRequest struct {
@@ -34,12 +35,17 @@ type Transaction struct {
 	IsPending bool `json:"isPending"`
 }
 
-func (client *Client) GetTransactionByHash(ctx context.Context, req GetTransactionByHashRequest) (Transaction, error) {
-	return getTransactionByHash(ctx, client, req)
+func GetTransactionByHash(ctx context.Context, req GetTransactionByHashRequest) (Transaction, error) {
+	return getTransactionByHash(ctx, req)
 }
 
-func getTransactionByHash(ctx context.Context, client *Client, req GetTransactionByHashRequest) (Transaction, error) {
-	transaction, isPending, err := client.eth.TransactionByHash(ctx, common.HexToHash(req.Hash))
+func getTransactionByHash(ctx context.Context, req GetTransactionByHashRequest) (Transaction, error) {
+	client, err := ethclient.Dial(GetNodeAddress(ctx))
+	if err != nil {
+		return Transaction{}, err
+	}
+
+	transaction, isPending, err := client.TransactionByHash(ctx, common.HexToHash(req.Hash))
 	if err != nil {
 		return Transaction{}, err
 	}
