@@ -1,4 +1,6 @@
-<img src="https://github.com/PumpkinSeed/letherscan/blob/cb354c7b4909013695e35f61f2c535794b257a34/assets/logo.png" width="250" alt="logo">
+<p align="center">
+    <img src="https://github.com/PumpkinSeed/letherscan/blob/cb354c7b4909013695e35f61f2c535794b257a34/assets/logo.png" width="250" alt="logo">
+</p>
 
 # letherscan - Lightweight Etherscan
 
