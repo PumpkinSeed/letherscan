@@ -17,6 +17,9 @@
 			<a href="/settings" class="menu-item" class:active={$page.url.pathname === '/settings'}>
 				Settings
 			</a>
+			<a href="/eth-call" class="menu-item" class:active={$page.url.pathname === '/eth-call'}>
+				ETH Call
+			</a>
 			<a 
 				href="https://github.com/PumpkinSeed/letherscan" 
 				target="_blank" 

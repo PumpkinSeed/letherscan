@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"log"
 	"log/slog"
 	"math/big"
 	"strings"
@@ -92,7 +91,8 @@ func ethCall(ctx context.Context, req ETHCallRequest) (ETHCallResponse, error) {
 
 	outputs, err := method.Outputs.Unpack(result)
 	if err != nil {
-		log.Fatal("failed to unpack result:", err)
+		slog.ErrorContext(ctx, "Failed to unpack result", slog.Any("method", method), slog.Any("err", err))
+		return ETHCallResponse{}, fmt.Errorf("failed to unpack result: %v", err)
 	}
 	decoded := make(map[string]interface{})
 	for i, output := range method.Outputs {
