@@ -5,6 +5,7 @@
     import { browser } from '$app/environment';
     import { get } from 'svelte/store';
     import { slide } from 'svelte/transition';
+    import { BASE_URL } from '$lib/config';
 
     interface Transaction {
         hash: string;
@@ -86,7 +87,7 @@
             if (!browser) {
                 throw new Error('This code must run in the browser');
             }
-            const url = new URL(`${window.location.origin}/blocks`);
+            const url = new URL(`${BASE_URL}/blocks`);
             url.searchParams.append('number_of_blocks', blocksToFetch.toString());
             if (blockNumber) {
                 url.searchParams.append('block_number', blockNumber);

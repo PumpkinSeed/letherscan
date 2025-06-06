@@ -5,6 +5,7 @@
     import { nodeAddress } from '$lib/stores/nodeAddress';
     import { slide } from 'svelte/transition';
     import { browser } from '$app/environment';
+    import { BASE_URL } from '$lib/config';
 
     interface Transaction {
         hash: string;
@@ -46,7 +47,7 @@
             if (!browser) {
                 throw new Error('This code must run in the browser');
             }
-            const response = await fetchWithNodeAddress(`${window.location.origin}/decode-contract-call-data`, {
+            const response = await fetchWithNodeAddress(`${BASE_URL}/decode-contract-call-data`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

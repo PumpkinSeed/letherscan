@@ -79,6 +79,8 @@ func main() {
 	r.Get("/blocks", getBlocks)
 	r.Get("/transaction/{hash}", getTransactionByHash)
 	r.Post("/decode-contract-call-data", decodeContractCallData)
+	r.Post("/parse-contract-abi", parseContractABI)
+	r.Post("/eth-call", ethCall)
 
 	host := ":8080"
 	if envHost := os.Getenv(EnvHost); envHost != "" {
@@ -87,6 +89,72 @@ func main() {
 	slog.Info("starting server", slog.String("address", host))
 	if err := http.ListenAndServe(host, r); err != nil {
 		slog.Error("failed to start server", "error", err)
+	}
+}
+
+func ethCall(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var req communicator.ETHCallRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		slog.ErrorContext(ctx, "Failed to decode request body", slog.Any("err", err))
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	respStruct, err := communicator.ETHCall(ctx, req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	data, err := json.Marshal(respStruct)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to marshal response", slog.Any("err", err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	_, err = w.Write(data)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to write response", slog.Any("err", err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func parseContractABI(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var req communicator.ParseContractABIRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		slog.ErrorContext(ctx, "Failed to decode request body", slog.Any("err", err))
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	respStruct, err := communicator.ParseContractABI(ctx, req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	data, err := json.Marshal(respStruct)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to marshal response", slog.Any("err", err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	_, err = w.Write(data)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to write response", slog.Any("err", err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 

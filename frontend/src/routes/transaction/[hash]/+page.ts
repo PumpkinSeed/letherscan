@@ -1,5 +1,6 @@
 import { fetchWithNodeAddress } from '$lib/utils/fetch';
 import { browser } from '$app/environment';
+import { BASE_URL } from '$lib/config';
 
 export const prerender = false;
 
@@ -29,7 +30,7 @@ export async function load({ params }: { params: { hash: string } }) {
         if (!browser) {
             throw new Error('This code must run in the browser');
         }
-        const response = await fetchWithNodeAddress(`${window.location.origin}/transaction/${params.hash}`);
+        const response = await fetchWithNodeAddress(`${BASE_URL}/transaction/${params.hash}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }

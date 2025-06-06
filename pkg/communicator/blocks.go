@@ -55,7 +55,7 @@ func GetLatestNBlock(ctx context.Context, req GetLatestNBlockRequest) (GetLatest
 }
 
 func getLatestNBlock(ctx context.Context, req GetLatestNBlockRequest) (GetLatestNBlockResponse, error) {
-	client, err := ethclient.Dial(GetNodeAddress(ctx))
+	client, err := ethclient.DialContext(ctx, GetNodeAddress(ctx))
 	if err != nil {
 		slog.ErrorContext(ctx, "Failed to connect to Ethereum client", slog.Any("err", err))
 		return GetLatestNBlockResponse{}, err
