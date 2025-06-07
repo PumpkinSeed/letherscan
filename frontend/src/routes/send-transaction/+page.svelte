@@ -118,62 +118,62 @@
 		Send a transaction to interact with a smart contract on the blockchain.
 	</p>
 
-	<div class="abi-section">
-		<div class="form-group">
-			<label for="contractABI">Contract ABI</label>
-			<textarea
-				id="contractABI"
-				bind:value={contractABI}
-				placeholder="Paste your contract ABI here..."
-				rows="10"
-				required
-			></textarea>
-		</div>
-
-		<div class="form-group">
-			<label for="stateMutability">State Mutability</label>
-			<select id="stateMutability" bind:value={stateMutability}>
-				{#each stateMutabilityOptions as option}
-					<option value={option.value}>{option.label}</option>
-				{/each}
-			</select>
-		</div>
-
-		<button type="button" on:click={handleParseABI} disabled={loading} class="parse-button">
-			{loading ? 'Parsing...' : 'Parse ABI'}
-		</button>
-
-		{#if parsedMethods.length > 0}
-			<div class="methods-container">
-				<h3>Available Methods</h3>
-				<div class="methods-list">
-					{#each parsedMethods as method}
-						<button
-							class="method-item {selectedMethod?.name === method.name ? 'selected' : ''}"
-							on:click={() => selectMethod(method)}
-						>
-							<div class="method-header">
-								<span class="method-name">{method.name}</span>
-								<span class="method-mutability">{method.state_mutability}</span>
-							</div>
-							{#if method.inputs?.length > 0}
-								<div class="method-inputs">
-									<strong>Inputs:</strong> {method.inputs.join(', ')}
-								</div>
-							{/if}
-							{#if method.outputs?.length > 0}
-								<div class="method-outputs">
-									<strong>Outputs:</strong> {method.outputs.join(', ')}
-								</div>
-							{/if}
-						</button>
-					{/each}
-				</div>
+	{#if !selectedMethod}
+		<div class="abi-section">
+			<div class="form-group">
+				<label for="contractABI">Contract ABI</label>
+				<textarea
+					id="contractABI"
+					bind:value={contractABI}
+					placeholder="Paste your contract ABI here..."
+					rows="10"
+					required
+				></textarea>
 			</div>
-		{/if}
-	</div>
 
-	{#if selectedMethod}
+			<div class="form-group">
+				<label for="stateMutability">State Mutability</label>
+				<select id="stateMutability" bind:value={stateMutability}>
+					{#each stateMutabilityOptions as option}
+						<option value={option.value}>{option.label}</option>
+					{/each}
+				</select>
+			</div>
+
+			<button type="button" on:click={handleParseABI} disabled={loading} class="parse-button">
+				{loading ? 'Parsing...' : 'Parse ABI'}
+			</button>
+
+			{#if parsedMethods.length > 0}
+				<div class="methods-container">
+					<h3>Available Methods</h3>
+					<div class="methods-list">
+						{#each parsedMethods as method}
+							<button
+								class="method-item {selectedMethod?.name === method.name ? 'selected' : ''}"
+								on:click={() => selectMethod(method)}
+							>
+								<div class="method-header">
+									<span class="method-name">{method.name}</span>
+									<span class="method-mutability">{method.state_mutability}</span>
+								</div>
+								{#if method.inputs?.length > 0}
+									<div class="method-inputs">
+										<strong>Inputs:</strong> {method.inputs.join(', ')}
+									</div>
+								{/if}
+								{#if method.outputs?.length > 0}
+									<div class="method-outputs">
+										<strong>Outputs:</strong> {method.outputs.join(', ')}
+									</div>
+								{/if}
+							</button>
+						{/each}
+					</div>
+				</div>
+			{/if}
+		</div>
+	{:else}
 		<div class="input-section">
 			<button type="button" on:click={startOver} class="start-over-button">
 				Start Over
