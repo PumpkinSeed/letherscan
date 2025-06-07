@@ -3,13 +3,14 @@ package communicator
 import (
 	"context"
 	"fmt"
+	"log"
+	"log/slog"
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"log"
-	"log/slog"
-	"math/big"
 )
 
 type SendTransactionRequest struct {
@@ -54,7 +55,7 @@ func SendTransaction(ctx context.Context, req SendTransactionRequest) (SendTrans
 	// Contract address
 	contractAddress := common.HexToAddress(req.ContractAddress)
 
-	callData, err := getCallData(ctx, req.ContractABI, req.Method, req.Input)
+	callData, _, err := getCallData(ctx, req.ContractABI, req.Method, req.Input)
 	if err != nil {
 		return SendTransactionResponse{}, fmt.Errorf("failed to get call data: %v", err)
 	}

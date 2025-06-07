@@ -28,14 +28,13 @@ func ETHCall(ctx context.Context, req ETHCallRequest) (ETHCallResponse, error) {
 }
 
 func ethCall(ctx context.Context, req ETHCallRequest) (ETHCallResponse, error) {
-	//client, err := ethclient.DialContext(GetNodeAddress(ctx))
-	client, err := ethclient.DialContext(ctx, "https://eth-mainnet.g.alchemy.com/v2/C7p6saTF6QMxOdXiMOUlIPH-0Sb4PKgC")
+	client, err := ethclient.DialContext(ctx, GetNodeAddress(ctx))
 	if err != nil {
 		slog.ErrorContext(ctx, "Failed to connect to Ethereum client", slog.Any("err", err))
 		return ETHCallResponse{}, err
 	}
 
-	callData, err := getCallData(ctx, req.ContractABI, req.Method, req.Input)
+	callData, method, err := getCallData(ctx, req.ContractABI, req.Method, req.Input)
 	if err != nil {
 		return ETHCallResponse{}, fmt.Errorf("failed to get call data: %v", err)
 	}
@@ -50,45 +49,19 @@ func ethCall(ctx context.Context, req ETHCallRequest) (ETHCallResponse, error) {
 		slog.ErrorContext(ctx, "Failed to call contract", slog.Any("method", req.Method), slog.Any("err", err))
 		return ETHCallResponse{}, err
 	}
+	if len(result) == 0 {
+		slog.ErrorContext(ctx, "No result returned from contract call", slog.Any("method", req.Method))
+		return ETHCallResponse{}, fmt.Errorf("no result returned from contract call")
+	}
 
-	//decoded := make(map[string]interface{})
-	//if err := method.Outputs.UnpackIntoMap(decoded, result); err != nil {
-	//	slog.ErrorContext(ctx, "Failed to unpack result", slog.Any("method", method), slog.Any("err", err), slog.Any("result", hex.EncodeToString(result)))
-	//	return ETHCallResponse{}, fmt.Errorf("failed to unpack result: %v", err)
-	//}
-	//outputs, err := method.Outputs.Unpack(result)
-	//if err != nil {
-	//	slog.ErrorContext(ctx, "Failed to unpack result", slog.Any("method", method), slog.Any("err", err))
-	//	return ETHCallResponse{}, fmt.Errorf("failed to unpack result: %v", err)
-	//}
-	//decoded := make(map[string]interface{})
-	//for i, output := range method.Outputs {
-	//	switch output.Type.String() {
-	//	case "address":
-	//		decoded[output.Name] = common.BytesToAddress(outputs[i].([]byte))
-	//	case "uint256":
-	//		if val, ok := outputs[i].(*big.Int); ok {
-	//			decoded[output.Name] = val.String()
-	//		} else {
-	//			decoded[output.Name] = outputs[i]
-	//		}
-	//	case "bytes32":
-	//		if b32, ok := outputs[i].([32]byte); ok {
-	//			decoded[output.Name] = hex.EncodeToString(b32[:])
-	//		} else {
-	//			decoded[output.Name] = outputs[i]
-	//		}
-	//	case "string":
-	//		if str, ok := outputs[i].(string); ok {
-	//			decoded[output.Name] = str
-	//		} else {
-	//			decoded[output.Name] = outputs[i]
-	//		}
-	//	}
-	//}
+	decoded, err := parseResult(ctx, method, result)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to parse result", slog.Any("method", req.Method), slog.Any("err", err))
+		return ETHCallResponse{}, fmt.Errorf("failed to parse result: %v", err)
+	}
 
 	return ETHCallResponse{
 		RawResponse: hex.EncodeToString(result),
-		//Decoded:     decoded,
+		Decoded:     decoded,
 	}, nil
 }
