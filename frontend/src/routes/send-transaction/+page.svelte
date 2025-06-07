@@ -191,6 +191,11 @@
 					/>
 				</div>
 
+				<div class="warning-box">
+					<strong>⚠️ Security Warning</strong>
+					<p>Only paste your private key here if you trust the host of this Leatherscan instance. Your private key will be sent to the server to sign the transaction.</p>
+				</div>
+
 				<div class="form-group">
 					<label for="privateKey">Private Key (without 0x prefix)</label>
 					<input
@@ -498,5 +503,27 @@
 	.input-parameters h3 {
 		margin: 0 0 1rem 0;
 		color: #333;
+	}
+
+	.warning-box {
+		padding: 1rem;
+		background-color: #fff3cd;
+		border: 1px solid #ffeeba;
+		border-radius: 0.5rem;
+		margin-top: 0.75rem;
+		margin-bottom: 0.25rem;
+	}
+
+	.warning-box strong {
+		color: #856404;
+		display: block;
+		margin-bottom: 0.5rem;
+	}
+
+	.warning-box p {
+		color: #856404;
+		margin: 0;
+		font-size: 0.9rem;
+		line-height: 1.4;
 	}
 </style> 
