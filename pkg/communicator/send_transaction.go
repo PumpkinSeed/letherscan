@@ -21,11 +21,16 @@ type SendTransactionRequest struct {
 	Input           []string `json:"input"`       // input parameters for the method
 }
 
-type SendTransactionResponse struct{}
+type SendTransactionResponse struct {
+	TransactionHash string `json:"transaction_hash"`
+}
 
 func SendTransaction(ctx context.Context, req SendTransactionRequest) (SendTransactionResponse, error) {
-	//client, err := ethclient.DialContext(GetNodeAddress(ctx))
-	client, err := ethclient.DialContext(ctx, "https://eth-mainnet.g.alchemy.com/v2/C7p6saTF6QMxOdXiMOUlIPH-0Sb4PKgC")
+	return sendTransaction(ctx, req)
+}
+
+func sendTransaction(ctx context.Context, req SendTransactionRequest) (SendTransactionResponse, error) {
+	client, err := ethclient.DialContext(ctx, GetNodeAddress(ctx))
 	if err != nil {
 		slog.ErrorContext(ctx, "Failed to connect to Ethereum client", slog.Any("err", err))
 		return SendTransactionResponse{}, err
@@ -33,23 +38,26 @@ func SendTransaction(ctx context.Context, req SendTransactionRequest) (SendTrans
 
 	privateKey, err := crypto.HexToECDSA(req.PrivateKeyHex)
 	if err != nil {
-		log.Fatal(err)
+		slog.ErrorContext(ctx, "Failed to convert private key from hex", slog.Any("err", err))
+		return SendTransactionResponse{}, fmt.Errorf("failed to convert private key from hex: %v", err)
 	}
 
 	// Derive sender address
 	fromAddress := crypto.PubkeyToAddress(privateKey.PublicKey)
 
 	// Get the nonce
-	nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
+	nonce, err := client.PendingNonceAt(ctx, fromAddress)
 	if err != nil {
-		log.Fatal(err)
+		slog.ErrorContext(ctx, "Failed to get nonce", slog.Any("err", err))
+		return SendTransactionResponse{}, fmt.Errorf("failed to get nonce: %v", err)
 	}
 
 	// Gas parameters
-	gasLimit := uint64(100000)                                    // enough for simple call
-	gasPrice, err := client.SuggestGasPrice(context.Background()) // or hardcode if needed
+	gasLimit := uint64(100000)
+	gasPrice, err := client.SuggestGasPrice(ctx)
 	if err != nil {
-		log.Fatal(err)
+		slog.ErrorContext(ctx, "Failed to suggest gas price", slog.Any("err", err))
+		return SendTransactionResponse{}, fmt.Errorf("failed to suggest gas price: %v", err)
 	}
 
 	// Contract address
@@ -63,26 +71,29 @@ func SendTransaction(ctx context.Context, req SendTransactionRequest) (SendTrans
 	// Create transaction
 	tx := types.NewTransaction(nonce, contractAddress, big.NewInt(0), gasLimit, gasPrice, callData)
 
-	chainID, err := client.ChainID(context.Background())
+	chainID, err := client.ChainID(ctx)
 	if err != nil {
 		log.Fatal("Failed to get chain ID:", err)
 	}
 	if chainID == nil {
-		chainID = big.NewInt(1) // Default to mainnet if chain ID is not available
+		chainID = big.NewInt(1)
 	}
 
 	// Sign it
 	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), privateKey)
 	if err != nil {
-		log.Fatal(err)
+		slog.ErrorContext(ctx, "Failed to sign transaction", slog.Any("err", err))
+		return SendTransactionResponse{}, fmt.Errorf("failed to sign transaction: %v", err)
 	}
 
 	// Send the transaction
-	err = client.SendTransaction(context.Background(), signedTx)
+	err = client.SendTransaction(ctx, signedTx)
 	if err != nil {
-		log.Fatal(err)
+		slog.ErrorContext(ctx, "Failed to send transaction", slog.Any("err", err))
+		return SendTransactionResponse{}, fmt.Errorf("failed to send transaction: %v", err)
 	}
 
-	fmt.Printf("Sent tx: %s\n", signedTx.Hash().Hex())
-	return SendTransactionResponse{}, nil
+	return SendTransactionResponse{
+		TransactionHash: signedTx.Hash().Hex(),
+	}, nil
 }

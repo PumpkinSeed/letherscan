@@ -81,6 +81,7 @@ func main() {
 	r.Post("/decode-contract-call-data", decodeContractCallData)
 	r.Post("/parse-contract-abi", parseContractABI)
 	r.Post("/eth-call", ethCall)
+	r.Post("/send-transaction", sendTransaction)
 
 	host := ":8080"
 	if envHost := os.Getenv(EnvHost); envHost != "" {
@@ -89,6 +90,39 @@ func main() {
 	slog.Info("starting server", slog.String("address", host))
 	if err := http.ListenAndServe(host, r); err != nil {
 		slog.Error("failed to start server", "error", err)
+	}
+}
+
+func sendTransaction(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var req communicator.SendTransactionRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		slog.ErrorContext(ctx, "Failed to decode request body", slog.Any("err", err))
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	respStruct, err := communicator.SendTransaction(ctx, req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	data, err := json.Marshal(respStruct)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to marshal response", slog.Any("err", err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	_, err = w.Write(data)
+	if err != nil {
+		slog.ErrorContext(ctx, "Failed to write response", slog.Any("err", err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
