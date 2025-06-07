@@ -2,15 +2,21 @@
 	import { onMount } from 'svelte';
 	import { BASE_URL } from '$lib/config';
 
+	interface Method {
+		name: string;
+		state_mutability: string;
+		inputs: string[];
+		outputs: string[];
+	}
+
 	let address = '';
-	let data = '';
 	let result = '';
 	let loading = false;
 	let error = '';
 	let contractABI = '';
 	let stateMutability = '';
-	let parsedMethods: string[] = [];
-	let selectedMethod: string | null = null;
+	let parsedMethods: Method[] = [];
+	let selectedMethod: Method | null = null;
 	let showMethodSelection = true;
 	let inputValues: string[] = [];
 	let decodedResult: Record<string, any> | null = null;
@@ -22,16 +28,9 @@
 		{ value: 'payable', label: 'Payable' }
 	];
 
-	function selectMethod(method: string) {
+	function selectMethod(method: Method) {
 		selectedMethod = method;
-		// Extract input parameters from method signature
-		const match = method.match(/\((.*?)\)/);
-		if (match && match[1]) {
-			const params = match[1].split(',').map(p => p.trim());
-			inputValues = new Array(params.length).fill('');
-		} else {
-			inputValues = [];
-		}
+		inputValues = new Array(method?.inputs?.length || 0).fill('');
 		showMethodSelection = false;
 	}
 
@@ -44,7 +43,7 @@
 	}
 
 	async function handleSubmit() {
-		if (!address || !selectedMethod || !contractABI) {
+		if (!address || !selectedMethod?.name || !contractABI) {
 			error = 'Please provide all required fields';
 			return;
 		}
@@ -58,7 +57,7 @@
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
-					method: selectedMethod,
+					method: selectedMethod.name,
 					contract_address: address,
 					contract_abi: contractABI,
 					input: inputValues
@@ -152,10 +151,23 @@
 					<div class="methods-list">
 						{#each parsedMethods as method}
 							<button
-								class="method-item {selectedMethod === method ? 'selected' : ''}"
+								class="method-item {selectedMethod?.name === method.name ? 'selected' : ''}"
 								on:click={() => selectMethod(method)}
 							>
-								{method}
+								<div class="method-header">
+									<span class="method-name">{method.name}</span>
+									<span class="method-mutability">{method.state_mutability}</span>
+								</div>
+								{#if method.inputs?.length > 0}
+									<div class="method-inputs">
+										<strong>Inputs:</strong> {method.inputs.join(', ')}
+									</div>
+								{/if}
+								{#if method.outputs?.length > 0}
+									<div class="method-outputs">
+										<strong>Outputs:</strong> {method.outputs.join(', ')}
+									</div>
+								{/if}
 							</button>
 						{/each}
 					</div>
@@ -183,15 +195,30 @@
 				{#if selectedMethod}
 					<div class="selected-method">
 						<h3>Selected Method</h3>
-						<pre>{selectedMethod}</pre>
+						<div class="method-details">
+							<div class="method-header">
+								<span class="method-name">{selectedMethod.name}</span>
+								<span class="method-mutability">{selectedMethod.state_mutability}</span>
+							</div>
+							{#if selectedMethod.inputs?.length > 0}
+								<div class="method-inputs">
+									<strong>Inputs:</strong> {selectedMethod.inputs.join(', ')}
+								</div>
+							{/if}
+							{#if selectedMethod.outputs?.length > 0}
+								<div class="method-outputs">
+									<strong>Outputs:</strong> {selectedMethod.outputs.join(', ')}
+								</div>
+							{/if}
+						</div>
 					</div>
 
-					{#if inputValues.length > 0}
+					{#if selectedMethod.inputs?.length > 0}
 						<div class="input-parameters">
 							<h3>Input Parameters</h3>
-							{#each inputValues as value, i}
+							{#each selectedMethod.inputs as input, i}
 								<div class="form-group">
-									<label for="input-{i}">Parameter {i + 1}</label>
+									<label for="input-{i}">{input}</label>
 									<input
 										type="text"
 										id="input-{i}"
@@ -361,6 +388,39 @@
 		gap: 0.75rem;
 	}
 
+	.method-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 0.5rem;
+	}
+
+	.method-name {
+		font-weight: 600;
+		font-size: 1.1rem;
+	}
+
+	.method-mutability {
+		font-size: 0.8rem;
+		padding: 0.25rem 0.5rem;
+		background-color: #e9ecef;
+		border-radius: 0.25rem;
+		color: #495057;
+	}
+
+	.method-inputs,
+	.method-outputs {
+		font-size: 0.9rem;
+		color: #666;
+		margin-top: 0.5rem;
+	}
+
+	.method-details {
+		padding: 1rem;
+		background-color: #f8f9fa;
+		border-radius: 0.25rem;
+	}
+
 	.method-item {
 		text-align: left;
 		padding: 1rem;
@@ -375,7 +435,7 @@
 		word-break: break-word;
 		height: 100%;
 		display: flex;
-		align-items: center;
+		flex-direction: column;
 	}
 
 	.method-item:hover {
@@ -390,6 +450,16 @@
 		border-color: #7ea2ee;
 		color: white;
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	}
+
+	.method-item.selected .method-mutability {
+		background-color: rgba(255, 255, 255, 0.2);
+		color: white;
+	}
+
+	.method-item.selected .method-inputs,
+	.method-item.selected .method-outputs {
+		color: rgba(255, 255, 255, 0.9);
 	}
 
 	.input-section {

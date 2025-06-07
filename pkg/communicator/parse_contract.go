@@ -15,7 +15,14 @@ type ParseContractABIRequest struct {
 }
 
 type ParseContractABIResponse struct {
-	Methods []string `json:"methods"`
+	Methods []Method `json:"methods"`
+}
+
+type Method struct {
+	Name            string   `json:"name"`
+	StateMutability string   `json:"state_mutability"`
+	Inputs          []string `json:"inputs"`
+	Outputs         []string `json:"outputs"`
 }
 
 func ParseContractABI(ctx context.Context, req ParseContractABIRequest) (ParseContractABIResponse, error) {
@@ -33,7 +40,20 @@ func parseContractABI(ctx context.Context, req ParseContractABIRequest) (ParseCo
 	var response ParseContractABIResponse
 	for _, method := range parsedABI.Methods {
 		if method.StateMutability == req.StateMutabilityFilter || req.StateMutabilityFilter == "" {
-			response.Methods = append(response.Methods, strings.ReplaceAll(method.String(), "function ", ""))
+			var inputs []string
+			for _, input := range method.Inputs {
+				inputs = append(inputs, fmt.Sprintf("%s %s", input.Type.String(), input.Name))
+			}
+			var outputs []string
+			for _, output := range method.Outputs {
+				outputs = append(outputs, fmt.Sprintf("%s %s", output.Type.String(), output.Name))
+			}
+			response.Methods = append(response.Methods, Method{
+				Name:            method.Name,
+				StateMutability: method.StateMutability,
+				Inputs:          inputs,
+				Outputs:         outputs,
+			})
 		}
 	}
 
