@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { fetchWithNodeAddress } from '$lib/utils/fetch';
 	import { onMount } from 'svelte';
 	import { BASE_URL } from '$lib/config';
 
@@ -50,7 +51,7 @@
 		loading = true;
 		error = '';
 		try {
-			const response = await fetch(`${BASE_URL}/send-transaction`, {
+			const response = await fetchWithNodeAddress(`${BASE_URL}/send-transaction`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
